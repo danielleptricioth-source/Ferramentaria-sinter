@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramentaria - RHM Sinter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- CABEÇALHO -->
+    <header class="bg-slate-800 border-b border-slate-700 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-3 rounded-xl text-white shadow-lg shadow-blue-600/30">
+                    <i class="fa-solid fa-toolbox text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide text-white">RHM SINTER</h1>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Sistema de Controle de Ferramentaria</p>
+                </div>
+            </div>
+            <!-- NAVEGAÇÃO DE ABAS -->
+            <nav class="flex bg-slate-900 p-1 rounded-xl border border-slate-700">
+                <button onclick="switchTab('retirada')" id="btn-tab-retirada" class="px-5 py-2 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow">
+                    <i class="fa-solid fa-right-left mr-2"></i>Retirada / Devolução
+                </button>
+                <button onclick="switchTab('historico')" id="btn-tab-historico" class="px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-clock-rotate-left mr-2"></i>Histórico
+                </button>
+                <button onclick="switchTab('config')" id="btn-tab-config" class="px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-gear mr-2"></i>Configurações
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        <!-- ABA 1: RETIRADA E DEVOLUÇÃO -->
+        <section id="tab-retirada" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- FORMULÁRIO DE MOVIMENTAÇÃO -->
+                <div class="lg:col-span-1 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-5">
+                    <div class="border-b border-slate-700 pb-3 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-barcode text-blue-500"></i> Movimentação
+                        </h2>
+                        <span id="badge-modo" class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-emerald-500/30">Modo Retirada</span>
+                    </div>
+
+                    <!-- Alternar Ação -->
+                    <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
+                        <button type="button" id="mode-retirar" onclick="setAcaoMovimento('retirar')" class="py-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow">Retirar</button>
+                        <button type="button" id="mode-devolver" onclick="setAcaoMovimento('devolver')" class="py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white">Devolver</button>
+                    </div>
+
+                    <!-- Identificação do Colaborador -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Matrícula ou Leitor QR Code</label>
+                        <div class="relative">
+                            <input type="text" id="input-matricula" placeholder="Digite a matrícula..." oninput="buscarColaborador()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition font-mono">
+                            <div class="absolute right-3 top-3.5 text-slate-500">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dados Automáticos do Colaborador -->
+                    <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-700/60 space-y-1">
+                        <p class="text-xs text-slate-400">Colaborador Identificado:</p>
+                        <p id="colab-nome" class="font-bold text-white text-sm">- Digite a matrícula -</p>
+                        <p id="colab-setor" class="text-xs text-blue-400 font-medium">Setor: -</p>
+                    </div>
+
+                    <!-- Seleção / Digitação da Ferramenta -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Ferramenta</label>
+                        <input type="text" id="input-ferramenta" list="lista-catalogo-ferramentas" placeholder="Digite ou selecione a ferramenta..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition">
+                        <datalist id="lista-catalogo-ferramentas">
+                            <!-- Inserido dinamicamente via JS -->
+                        </datalist>
+                        <p class="text-[11px] text-slate-500">Pode digitar o nome de qualquer ferramenta livremente.</p>
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Observações (Opcional)</label>
+                        <input type="text" id="input-obs" placeholder="Ex: Equipamento com pequeno desgaste..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition text-sm">
+                    </div>
+
+                    <!-- Botão de Ação -->
+                    <button onclick="executarMovimento()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Confirmar Retirada
+                    </button>
+                </div>
+
+                <!-- PAINEL DE FERRAMENTAS EM USO -->
+                <div class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl flex flex-col">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-emerald-500"></i> Ferramentas Atualmente Retiradas (Em Uso)
+                        </h2>
+                        <span id="contador-retiradas" class="bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded-full font-bold">0 itens</span>
+                    </div>
+
+                    <div class="flex-grow overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase tracking-wider">
+                                    <th class="py-3 px-3">Data/Hora</th>
+                                    <th class="py-3 px-3">Colaborador</th>
+                                    <th class="py-3 px-3">Ferramenta</th>
+                                    <th class="py-3 px-3">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-em-uso" class="divide-y divide-slate-700/50 text-sm">
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-slate-500">Nenhuma ferramenta retirada no momento.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ABA 2: HISTÓRICO -->
+        <section id="tab-historico" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-700 pb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-blue-500"></i> Histórico Completo de Movimentações
+                    </h2>
+                    <div class="w-full md:w-auto">
+                        <input type="text" id="filtro-historico" oninput="renderizarHistorico()" placeholder="Filtrar por nome ou ferramenta..." class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 w-full md:w-72">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-3">Status</th>
+                                <th class="py-3 px-3">Data / Hora</th>
+                                <th class="py-3 px-3">Matrícula</th>
+                                <th class="py-3 px-3">Colaborador</th>
+                                <th class="py-3 px-3">Setor</th>
+                                <th class="py-3 px-3">Ferramenta</th>
+                                <th class="py-3 px-3">Obs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-historico" class="divide-y divide-slate-700/50 text-sm">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-slate-500">Nenhum registro no histórico.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: CONFIGURAÇÕES -->
+        <section id="tab-config" class="hidden space-y-6">
+            <!-- Tela de Login das Configurações -->
+            <div id="config-login" class="max-w-md mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl space-y-6 text-center">
+                <div class="bg-blue-600/20 w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/30">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-white">Área Restrita</h2>
+                    <p class="text-xs text-slate-400 mt-1">Digite a senha de administrador para gerenciar o sistema.</p>
+                </div>
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Senha de Acesso</label>
+                        <input type="password" id="senha-admin" placeholder="Digite a senha..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="tentarLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition">Acessar Configurações</button>
+                </div>
+            </div>
+
+            <!-- Painel de Cadastros (Oculto inicialmente por segurança) -->
+            <div id="config-painel" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cadastrar Colaborador -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-700 pb-3">
+                            <i class="fa-solid fa-user-plus text-blue-500"></i> Cadastrar Novo Colaborador
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Matrícula</label>
+                                <input type="text" id="novo-colab-mat" placeholder="Ex: 61430" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Nome Completo</label>
+                                <input type="text" id="novo-colab-nome" placeholder="Ex: Roberto Carlos" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Setor</label>
+                                <input type="text" id="novo-colab-setor" value="MANUTENCAO" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <button onclick="cadastrarColaborador()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">Salvar Colaborador</button>
+                        </div>
+                    </div>
+
+                    <!-- Cadastrar Ferramenta -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-700 pb-3">
+                            <i class="fa-solid fa-hammer text-emerald-500"></i> Cadastrar Nova Ferramenta
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Nome da Ferramenta</label>
+                                <input type="text" id="nova-ferramenta-nome" placeholder="Ex: Chave de Fenda 10mm" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Categoria</label>
+                                <input type="text" id="nova-ferramenta-cat" value="MANUTENCAO / OFICINA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <button onclick="cadastrarFerramenta()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">Adicionar ao Catálogo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Alterar Senha de Administrador -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-700 pb-3">
+                            <i class="fa-solid fa-key text-amber-500"></i> Alterar Senha de Administrador
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400">Nova Senha</label>
+                                <input type="password" id="nova-senha" placeholder="Digite a nova senha..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <button onclick="alterarSenha()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">Atualizar Senha</button>
+                        </div>
+                    </div>
+
+                    <!-- Gerenciamento do Histórico (Protegido por senha) -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-700 pb-3">
+                            <i class="fa-solid fa-shield-halved text-red-400"></i> Gerenciamento de Registros
+                        </h3>
+                        <div class="space-y-3">
+                            <p class="text-xs text-slate-400">Esta ação apagará permanentemente todo o histórico de movimentações guardado no sistema.</p>
+                            <button onclick="limparHistoricoProtegido()" class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 font-bold py-3 rounded-xl text-sm border border-red-600/30 shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-trash-can"></i> Limpar Todo o Histórico
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT DA APLICAÇÃO -->
+    <script>
+        let colaboradores = JSON.parse(localStorage.getItem('rhm_colaboradores')) || [
+            { mat: "61420", nome: "Jorge Luiz Pereira Nascimento", setor: "MANUTENCAO" },
+            { mat: "30002368", nome: "Rafael Rosa Louzada", setor: "MANUTENCAO" },
+            { mat: "60126", nome: "Fabiano Moreira De Souza", setor: "MANUTENCAO" },
+            { mat: "30016264", nome: "Luiz Felipe Dos Santos Silva", setor: "MANUTENCAO" },
+            { mat: "63228", nome: "Eduardo Ferreira Gomes", setor: "MANUTENCAO" },
+            { mat: "60661", nome: "Leandro Pessanha Gomes", setor: "MANUTENCAO" },
+            { mat: "30004683", nome: "Luiz Carlos Do Nascimento", setor: "MANUTENCAO" },
+            { mat: "62352", nome: "Steves Anderson Maximino", setor: "MANUTENCAO" },
+            { mat: "30013216", nome: "Rafael Silva Pereira", setor: "MANUTENCAO" },
+            { mat: "60273", nome: "Carlos Simoes Roberto", setor: "MANUTENCAO" },
+            { mat: "60138", nome: "Jerry Dias Dos Santos", setor: "MANUTENCAO" },
+            { mat: "30010892", nome: "Sidnei Ramos Pacheco", setor: "MANUTENCAO" },
+            { mat: "63440", nome: "Wellington Alves Barbosa", setor: "MANUTENCAO" },
+            { mat: "30006889", nome: "Nathan Ramos De Oliveira", setor: "MANUTENCAO" },
+            { mat: "62043", nome: "Doriedson Gomes Evangelista", setor: "MANUTENCAO" },
+            { mat: "62188", nome: "Adalberto Loredo Junior", setor: "MANUTENCAO" },
+            { mat: "30009767", nome: "Wanderson Moreira Valentim", setor: "MANUTENCAO" },
+            { mat: "62983", nome: "Paulo Sergio Bento Da Silva", setor: "MANUTENCAO" },
+            { mat: "30021383", nome: "Marlon Da Silva Barbosa", setor: "MANUTENCAO" },
+            { mat: "30002056", nome: "Savio Carvalho Reis", setor: "MANUTENCAO" },
+            { mat: "62060", nome: "Joao Carlos Reis Dos Anjos", setor: "MANUTENCAO" },
+            { mat: "30023180", nome: "Marcelo Gaspar Brasil", setor: "MANUTENCAO" },
+            { mat: "62088", nome: "Rodrigo de Paula", setor: "MANUTENCAO" },
+            { mat: "40000088", nome: "Diego dos Santos Pinheiro", setor: "MANUTENCAO" },
+            { mat: "62059", nome: "Luciano Felix da Silva", setor: "MANUTENCAO" },
+            { mat: "62035", nome: "Gustavo Cabral Tavora", setor: "MANUTENCAO" },
+            { mat: "62037", nome: "Daniel Vieira Gabriel de Souza", setor: "MANUTENCAO" },
+            { mat: "60270", nome: "Gette Braz Sampaio da Silva", setor: "MANUTENCAO" },
+            { mat: "30027830", nome: "Giovanni Gomes Ferreira", setor: "MANUTENCAO" },
+            { mat: "30026996", nome: "Italo Fontoura Junior", setor: "MANUTENCAO" },
+            { mat: "30021659", nome: "Jose Moacir Roque de Araujo", setor: "MANUTENCAO" },
+            { mat: "59952", nome: "Marcos Antonio de Oliveira", setor: "MANUTENCAO" },
+            { mat: "40000092", nome: "Rafael Cunha Aguiar Gadelha", setor: "MANUTENCAO" },
+            { mat: "30022849", nome: "Clara Cerqueira", setor: "MANUTENCAO" },
+            { mat: "30023471", nome: "Rayane Rosa Alves", setor: "MANUTENCAO" },
+            { mat: "30021642", nome: "Felipe Esteves de Miranda", setor: "MANUTENCAO" }
+        ];
+
+        let catalogoFerramentas = JSON.parse(localStorage.getItem('rhm_ferramentas')) || [
+            "Chave Combinada 6mm", "Chave Combinada 7mm", "Chave Combinada 8mm", "Chave Combinada 10mm", "Chave Combinada 12mm", "Chave Combinada 13mm", "Chave Combinada 14mm", "Chave Combinada 17mm", "Chave Combinada 19mm", "Chave Combinada 22mm", "Chave Combinada 24mm", "Chave Combinada 27mm", "Chave Combinada 30mm", "Chave Combinada 32mm",
+            "Chave de Fenda 1/8 x 3", "Chave de Fenda 3/16 x 4", "Chave de Fenda 1/4 x 6", "Chave Phillips 1/8 x 3", "Chave Phillips 3/16 x 4", "Chave Phillips 1/4 x 6",
+            "Alicate Universal 8\"", "Alicate de Corte Diagonal 6\"", "Alicate de Bico Meia-Cana 6\"", "Alicate de Pressão 10\"", "Alicate Bomba d'Água",
+            "Martelo de Unha 25mm", "Martelo de Borracha 60mm", "Marreta 1kg", "Marreta 2kg",
+            "Paquímetro Universal 150mm", "Trena de Aço 5m", "Trena de Aço 10m", "Torquímetro de Estalo 20-100Nm", "Torquímetro de Estalo 50-250Nm",
+            "Esmerilhadeira Angular 4.5\"", "Furadeira de Impacto 1/2\"", "Parafusadeira a Bateria 18V", "Serra Tico-Tico",
+            "Talha Manual de Corrente 1 Ton", "Talha Manual de Corrente 2 Ton", "Cinta de Elevação 2 Ton", "Cinta de Elevação 3 Ton",
+            "Extrator de Polias 3 Garris", "Jogo de Chaves Allen 1.5 a 10mm", "Jogo de Chaves Estriadas", "Chave de Grifo 14\"", "Chave de Grifo 18\"",
+            "Disco de Corte Aço 4.5\"", "Disco de Desbaste 4.5\"", "Disco Flap Grão 40", "Escova de Aço Circular",
+            "Limpador de Contato Elétrico", "Silicone de Alta Temperatura", "Cabo Festoon 4x2.5mm", "Braçadeira de Aço Inox Diversas"
+        ];
+
+        let retiradasAtivas = JSON.parse(localStorage.getItem('rhm_retiradas')) || [];
+        let historico = JSON.parse(localStorage.getItem('rhm_historico')) || [];
+        let senhaAdmin = localStorage.getItem('rhm_senha') || 'admin123';
+        let acaoAtual = 'retirar';
+
+        window.onload = function() {
+            atualizarDatalistFerramentas();
+            renderizarRetiradas();
+            renderizarHistorico();
+        };
+
+        function switchTab(tab) {
+            ['retirada', 'historico', 'config'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${t}`).className = "px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tab}`).className = "px-5 py-2 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow";
+
+            if (tab === 'config') {
+                document.getElementById('config-login').classList.remove('hidden');
+                document.getElementById('config-painel').classList.add('hidden');
+                document.getElementById('senha-admin').value = '';
+            }
+        }
+
+        function setAcaoMovimento(acao) {
+            acaoAtual = acao;
+            const btnRet = document.getElementById('mode-retirar');
+            const btnDev = document.getElementById('mode-devolver');
+            const badge = document.getElementById('badge-modo');
+            const btnConf = document.querySelector('button[onclick="executarMovimento()"]');
+
+            if (acao === 'retirar') {
+                btnRet.className = "py-2 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow";
+                btnDev.className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+                badge.className = "bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-emerald-500/30";
+                badge.innerText = "Modo Retirada";
+                btnConf.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar Retirada';
+                btnConf.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2";
+            } else {
+                btnRet.className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+                btnDev.className = "py-2 text-xs font-bold rounded-lg transition-all bg-amber-600 text-white shadow";
+                badge.className = "bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-amber-500/30";
+                badge.innerText = "Modo Devolução";
+                btnConf.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Confirmar Devolução';
+                btnConf.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-600/30 transition flex items-center justify-center gap-2";
+            }
+        }
+
+        function buscarColaborador() {
+            const mat = document.getElementById('input-matricula').value.trim();
+            const colab = colaboradores.find(c => c.mat === mat);
+            if (colab) {
+                document.getElementById('colab-nome').innerText = colab.nome;
+                document.getElementById('colab-setor').innerText = `Setor: ${colab.setor}`;
+                document.getElementById('colab-nome').style.color = '#38bdf8';
+            } else {
+                document.getElementById('colab-nome').innerText = mat.length > 0 ? "Colaborador não encontrado" : "- Digite a matrícula -";
+                document.getElementById('colab-setor').innerText = "Setor: -";
+                document.getElementById('colab-nome').style.color = '#94a3b8';
+            }
+        }
+
+        function atualizarDatalistFerramentas() {
+            const datalist = document.getElementById('lista-catalogo-ferramentas');
+            datalist.innerHTML = '';
+            catalogoFerramentas.sort().forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                datalist.appendChild(opt);
+            });
+            localStorage.setItem('rhm_ferramentas', JSON.stringify(catalogoFerramentas));
+        }
+
+        function executarMovimento() {
+            const mat = document.getElementById('input-matricula').value.trim();
+            const ferramenta = document.getElementById('input-ferramenta').value.trim();
+            const obs = document.getElementById('input-obs').value.trim();
+            const colab = colaboradores.find(c => c.mat === mat);
+
+            if (!colab) {
+                alert("Por favor, digite uma matrícula válida de colaborador.");
+                return;
+            }
+            if (!ferramenta) {
+                alert("Por favor, selecione ou digite o nome da ferramenta.");
+                return;
+            }
+
+            const agora = new Date().toLocaleString('pt-BR');
+
+            if (acaoAtual === 'retirar') {
+                const novaRetirada = { id: Date.now(), mat, nome: colab.nome, setor: colab.setor, ferramenta, data: agora, obs };
+                retiradasAtivas.push(novaRetirada);
+                historico.unshift({ status: 'Retirada', ...novaRetirada });
+                alert(`Retirada de "${ferramenta}" registrada para ${colab.nome}.`);
+            } else {
+                const index = retiradasAtivas.findIndex(r => r.mat === mat && r.ferramenta.toLowerCase() === ferramenta.toLowerCase());
+                if (index > -1) {
+                    retiradasAtivas.splice(index, 1);
+                }
+                historico.unshift({ status: 'Devolução', id: Date.now(), mat, nome: colab.nome, setor: colab.setor, ferramenta, data: agora, obs });
+                alert(`Devolução de "${ferramenta}" registrada com sucesso.`);
+            }
+
+            localStorage.setItem('rhm_retiradas', JSON.stringify(retiradasAtivas));
+            localStorage.setItem('rhm_historico', JSON.stringify(historico));
+
+            document.getElementById('input-ferramenta').value = '';
+            document.getElementById('input-obs').value = '';
+            renderizarRetiradas();
+            renderizarHistorico();
+        }
+
+        function devolverRapido(id) {
+            const item = retiradasAtivas.find(r => r.id === id);
+            if (!item) return;
+
+            retiradasAtivas = retiradasAtivas.filter(r => r.id !== id);
+            const agora = new Date().toLocaleString('pt-BR');
+            historico.unshift({ status: 'Devolução', id: Date.now(), mat: item.mat, nome: item.nome, setor: item.setor, ferramenta: item.ferramenta, data: agora, obs: 'Devolução rápida pelo painel' });
+
+            localStorage.setItem('rhm_retiradas', JSON.stringify(retiradasAtivas));
+            localStorage.setItem('rhm_historico', JSON.stringify(historico));
+
+            renderizarRetiradas();
+            renderizarHistorico();
+        }
+
+        function renderizarRetiradas() {
+            const tbody = document.getElementById('tabela-em-uso');
+            document.getElementById('contador-retiradas').innerText = `${retiradasAtivas.length} itens`;
+
+            if (retiradasAtivas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">Nenhuma ferramenta retirada no momento.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            retiradasAtivas.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-700/50 hover:bg-slate-700/20 transition">
+                        <td class="py-3 px-3 text-xs text-slate-400 font-mono">${item.data}</td>
+                        <td class="py-3 px-3 font-semibold text-white">${item.nome} <span class="text-xs text-slate-500 font-normal">(${item.mat})</span></td>
+                        <td class="py-3 px-3 text-blue-400 font-medium">${item.ferramenta}</td>
+                        <td class="py-3 px-3">
+                            <button onclick="devolverRapido(${item.id})" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 transition font-semibold">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Devolver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderizarHistorico() {
+            const tbody = document.getElementById('tabela-historico');
+            const filtro = document.getElementById('filtro-historico').value.toLowerCase();
+
+            const filtrados = historico.filter(h => h.nome.toLowerCase().includes(filtro) || h.ferramenta.toLowerCase().includes(filtro));
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">Nenhum registro encontrado no histórico.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtrados.forEach(h => {
+                const badgeStatus = h.status === 'Retirada' 
+                    ? '<span class="bg-blue-500/20 text-blue-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-blue-500/30">Retirada</span>'
+                    : '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-emerald-500/30">Devolução</span>';
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-700/50 hover:bg-slate-700/20 transition">
+                        <td class="py-3 px-3">${badgeStatus}</td>
+                        <td class="py-3 px-3 text-xs text-slate-400 font-mono">${h.data}</td>
+                        <td class="py-3 px-3 text-xs font-mono text-slate-300">${h.mat}</td>
+                        <td class="py-3 px-3 font-medium text-white">${h.nome}</td>
+                        <td class="py-3 px-3 text-xs text-slate-400">${h.setor}</td>
+                        <td class="py-3 px-3 text-blue-400 font-medium">${h.ferramenta}</td>
+                        <td class="py-3 px-3 text-xs text-slate-400">${h.obs || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function limparHistoricoProtegido() {
+            const digitada = prompt("Digite a senha de administrador para apagar o histórico:");
+            if (digitada === senhaAdmin) {
+                if (confirm("Tem certeza absoluta que deseja apagar todo o histórico de movimentações?")) {
+                    historico = [];
+                    localStorage.removeItem('rhm_historico');
+                    renderizarHistorico();
+                    alert("Histórico apagado com sucesso.");
+                }
+            } else if (digitada !== null) {
+                alert("Senha incorreta! Ação cancelada.");
+            }
+        }
+
+        function tentarLogin() {
+            const senha = document.getElementById('senha-admin').value;
+            if (senha === senhaAdmin) {
+                document.getElementById('config-login').classList.add('hidden');
+                document.getElementById('config-painel').classList.remove('hidden');
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function alterarSenha() {
+            const nova = document.getElementById('nova-senha').value.trim();
+            if (!nova) {
+                alert("Digite uma nova senha válida.");
+                return;
+            }
+            senhaAdmin = nova;
+            localStorage.setItem('rhm_senha', senhaAdmin);
+            alert("Senha de administrador alterada com sucesso!");
+            document.getElementById('nova-senha').value = '';
+        }
+
+        function cadastrarColaborador() {
+            const mat = document.getElementById('novo-colab-mat').value.trim();
+            const nome = document.getElementById('novo-colab-nome').value.trim();
+            const setor = document.getElementById('novo-colab-setor').value.trim();
+
+            if (!mat || !nome) {
+                alert("Preencha a matrícula e o nome do colaborador.");
+                return;
+            }
+
+            colaboradores.push({ mat, nome, setor });
+            localStorage.setItem('rhm_colaboradores', JSON.stringify(colaboradores));
+            alert(`Colaborador ${nome} cadastrado com sucesso!`);
+            document.getElementById('novo-colab-mat').value = '';
+            document.getElementById('novo-colab-nome').value = '';
+        }
+
+        function cadastrarFerramenta() {
+            const nome = document.getElementById('nova-ferramenta-nome').value.trim();
+            if (!nome) {
+                alert("Digite o nome da ferramenta.");
+                return;
+            }
+
+            if (!catalogoFerramentas.includes(nome)) {
+                catalogoFerramentas.push(nome);
+                atualizarDatalistFerramentas();
+                alert(`Ferramenta "${nome}" adicionada ao catálogo com sucesso!`);
+                document.getElementById('nova-ferramenta-nome').value = '';
+            } else {
+                alert("Esta ferramenta já consta no catálogo.");
+            }
+        }
+    </script>
+</body>
+</html>
